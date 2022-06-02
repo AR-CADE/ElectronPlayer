@@ -194,6 +194,16 @@ module.exports = (store, services, mainWindow, app, defaultUserAgent) => {
           checked: store.get('options.launchFullscreen')
             ? store.get('options.launchFullscreen')
             : false
+        },        
+        {
+          label: 'Enable Analytics',
+          type: 'checkbox',
+          click(e) {
+            store.set('options.analytics', e.checked);
+          },
+          checked: store.get('options.analytics') 
+            ? store.get('options.analytics')
+            : false
         },
         {
           label: 'Enabled Services',
@@ -244,7 +254,11 @@ module.exports = (store, services, mainWindow, app, defaultUserAgent) => {
               app.getPath('userData'),
               'adblock-engine-cache.txt'
             );
-            fs.unlinkSync(engineCachePath);
+            fs.access(engineCachePath, fs.constants.F_OK, (err) => {
+              if (!err) {
+                fs.unlinkSync(engineCachePath);
+              }
+            });
 
             // Restart the app
             app.relaunch();

@@ -1,7 +1,7 @@
 // Modules to control application life and create native browser window
 const fs = require('fs'),
   path = require('path'),
-  { app, BrowserWindow, session, Menu, ipcMain } = require('electron'),
+  { app, BrowserWindow, session, Menu, ipcMain, dialog } = require('electron'),
   Store = require('electron-store'),
   {
     ElectronBlocker,
@@ -49,6 +49,15 @@ async function createWindow() {
     backgroundColor: '#00000000',
     fullscreen: store.get('options.launchFullscreen')
   });
+
+  let useAnalytics = store.get('options.analytics', undefined);
+
+  if (useAnalytics === undefined) {
+    useAnalytics = dialog.showMessageBoxSync(mainWindow, {
+      message: 'Simple Analytics is used which protects the users privacy. This tracking allow the developers to build a better product with more insight into what devices it is being used on so better testing can be done. \n Enable Analytics ?', 
+      buttons: ['No', 'Yes'] });
+    store.set('options.analytics', useAnalytics === 1 ? true : false);
+  }
 
   defaultUserAgent = mainWindow.webContents.userAgent;
 
@@ -228,38 +237,41 @@ async function createWindow() {
     }
   );
 
-  // Analytics
-  // Simple Analytics is used which protects the users privacy. This tracking allow the developers to build
-  // a better product with more insight into what devices it is being used on so better testing can be done.
-  let unique = false;
-  if(!store.get('_do_not_edit___date_')) {
-    store.set('_do_not_edit___date_', (new Date()).getTime())
-    unique = true;
-  } else {
-    let now = new Date();
-    let lastPing = new Date(new Date(store.get('_do_not_edit___date_')));
-    if (lastPing.getFullYear() !== now.getFullYear() || lastPing.getMonth() !== now.getMonth() || lastPing.getDate() !== now.getDate()) {
-      store.set('_do_not_edit___date_', now.getTime())
-      unique = true;
-    }
+  if (useAnalytics == true) {
+      // Analytics
+      // Simple Analytics is used which protects the users privacy. This tracking allow the developers to build
+      // a better product with more insight into what devices it is being used on so better testing can be done.
+      let unique = false;
+      if(!store.get('_do_not_edit___date_')) {
+        store.set('_do_not_edit___date_', (new Date()).getTime())
+        unique = true;
+      } else {
+        let now = new Date();
+        let lastPing = new Date(new Date(store.get('_do_not_edit___date_')));
+        if (lastPing.getFullYear() !== now.getFullYear() || lastPing.getMonth() !== now.getMonth() || lastPing.getDate() !== now.getDate()) {
+          store.set('_do_not_edit___date_', now.getTime())
+          unique = true;
+        }
+      }
+
+      fetch(simpleAnalyticsEndpoint, {
+          method: 'POST',
+          headers: {
+            "User-Agent": "ElectronPlayer",
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({
+              url: "https://electronplayer.otbeaumont.me/" + store.get('version'),
+              ua: mainWindow.webContents.userAgent,
+              width: mainWindow.getSize()[0],
+              unique: unique,
+              timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+              urlReferrer: process.platform
+          })
+      })
   }
 
-  fetch(simpleAnalyticsEndpoint, {
-      method: 'POST',
-      headers: {
-        "User-Agent": "ElectronPlayer",
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
-      body: JSON.stringify({
-          url: "https://electronplayer.otbeaumont.me/" + store.get('version'),
-          ua: mainWindow.webContents.userAgent,
-          width: mainWindow.getSize()[0],
-          unique: unique,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          urlReferrer: process.platform
-      })
-  })
 }
 
 // This method is called when the broswer window's dom is ready

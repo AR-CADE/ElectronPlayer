@@ -94,5 +94,29 @@ module.exports = [
     color: '#ffe600',
     style: {},
     permissions: []
+  },
+  {
+    name: 'Orange TV',
+    logo: 'services/orange_tv.svg',
+    url: 'https://chaines-tv.orange.fr',
+    color: '#ffffff',
+    style: {},
+    permissions: []
+  },
+  {
+    name: 'Pluto TV',
+    logo: 'services/pluto_tv.png',
+    url: 'https://pluto.tv',
+    color: '#FFDE2B',
+    style: {},
+    permissions: []
+  },
+  {
+    name: 'Runtime TV',
+    logo: 'services/runtime_tv.webp',
+    url: 'https://www.runtime.tv',
+    color: '#ffdd00',
+    style: {},
+    permissions: []
   }
 ];
